@@ -36,7 +36,7 @@ jobs:
           git checkout -b "${NEW_BRANCH}"
           git cherry-pick "${HEAD}"
           git push --set-upstream origin "${NEW_BRANCH}"
-          hub api repos/dubzzz/gh-actions-playground/pulls -F title="${PR_TITLE}" -F body="Rebased version of #${{github.event.issue.number}}" -F base="${BASE_REF}"
+          hub api repos/dubzzz/gh-actions-playground/pulls -F title="${PR_TITLE}" -F body="Rebased version of #${{github.event.issue.number}}" -F base="${BASE_REF}" -F head="${NEW_BRANCH}"
           hub pr close "${{github.event.issue.number}}" --delete-branch
         env:
           GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
