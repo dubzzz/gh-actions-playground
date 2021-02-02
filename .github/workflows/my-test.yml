@@ -11,9 +11,32 @@ jobs:
     runs-on: ubuntu-latest
     if: github.event.issue.pull_request && github.event.comment.body == 'plop'
     steps:
-      - name: Test
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+      - name: Checkout Pull Request
+        run: hub pr checkout "${{github.event.issue.number}}"
+        env:
+          GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
+      - name: Configure GIT
         run: |
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "github-actions[bot]"
+      - name: Create new PR
+        run: |
+          export HEAD=$(git rev-parse HEAD)
+          echo "HEAD is: ${HEAD}"
           export BASE_REF=$(hub api repos/dubzzz/gh-actions-playground/pulls/${{github.event.issue.number}} | jq ".base.ref" --raw-output)
           echo "BASE_REF is: ${BASE_REF}"
+          export PR_TITLE=$(hub api repos/dubzzz/gh-actions-playground/pulls/${{github.event.issue.number}} | jq ".title" --raw-output)
+          echo "PR_TITLE is: ${PR_TITLE}"
+          export NEW_BRANCH="extract-${HEAD}-from-pr-${{github.event.issue.number}}"
+          echo "NEW_BRANCH is: ${NEW_BRANCH}"
+          git checkout "${BASE_REF}"
+          git checkout -b "${NEW_BRANCH}"
+          git cherry-pick "${HEAD}"
+          git push --set-upstream origin "${NEW_BRANCH}"
+          hub pr create --title "${PR_TITLE}" --body "Rebased version of #${{github.event.issue.number}}"
+          hub pr close "${{github.event.issue.number}}" --delete-branch
         env:
           GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
