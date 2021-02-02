@@ -35,8 +35,10 @@ jobs:
           git checkout "${BASE_REF}"
           git checkout -b "${NEW_BRANCH}"
           git cherry-pick "${HEAD}"
+          export PR_HEAD=$(git rev-parse HEAD)
+          echo "PR_HEAD is: ${PR_HEAD}"
           git push --set-upstream origin "${NEW_BRANCH}"
-          hub api repos/dubzzz/gh-actions-playground/pulls -F title="${PR_TITLE}" -F body="Rebased version of #${{github.event.issue.number}}" -F base="${BASE_REF}" -F head="${NEW_BRANCH}"
+          hub api repos/dubzzz/gh-actions-playground/pulls -F title="${PR_TITLE}" -F body="Rebased version of #${{github.event.issue.number}}, diff since opened: https://github.com/dubzzz/gh-actions-playground/compare/${PR_HEAD}...${NEW_BRANCH}" -F base="${BASE_REF}" -F head="${NEW_BRANCH}"
           hub api repos/dubzzz/gh-actions-playground/pulls/${{github.event.issue.number}} -F state="closed"
         env:
           GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
